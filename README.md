@@ -40,6 +40,6 @@ Antes de começar, certifique-se de ter instalado no seu servidor:
 
 1. **Clone o repositório:**
    ```bash
-   git clone [https://github.com/JhonnyASoares/Stream.git](https://github.com/JhonnyASoares/Stream.git)
+   git clone [https://github.com/JhonnyASoares/Odadlos-Stream.git](https://github.com/JhonnyASoares/Odadlos-Stream.git)
    cd odadlos-stream
    ```
