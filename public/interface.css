@@ -1,0 +1,70 @@
+#room-title {
+  position: fixed;
+  top: 16px;
+  left: 16px;
+  z-index: 1;
+}
+#buttons-container {
+  z-index: 1;
+  position: fixed;
+  top: 16px;
+  right: 16px;
+}
+#stream-screen {
+  width: 90%;
+  height: 100%;
+  min-height: 88vh;
+  /* display: flex; */
+  flex-direction: column;
+}
+#videos-grid {
+  width: 100%;
+  height: 100%;
+  flex: 1;
+  display: grid;
+  gap: 12px;
+  /* Estado padrão: distribuição igualitária automática */
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr));
+  grid-auto-rows: 1fr;
+  align-content: stretch;
+  transition: all 0.3s ease;
+}
+/* Estado quando um vídeo é fixado/maximizado (Estilo Google Meet) */
+#videos-grid.pinned-layout {
+  grid-template-columns: 1fr 320px; /* Esquerda o grande flexível, direita barra fixa de 320px */
+  grid-auto-rows: unset;
+}
+
+/* O vídeo fixado ocupa a coluna da esquerda */
+#videos-grid.pinned-layout .pinned {
+  grid-column: 1;
+  grid-row: 1 / -1; /* Ocupa todas as linhas da altura disponível */
+  height: 100%;
+  max-height: 80vh; /* Ajuste conforme necessário */
+}
+
+/* Os outros vídeos vão para a coluna da direita empilhados */
+#videos-grid.pinned-layout > div:not(.pinned) {
+  grid-column: 2;
+  height: 160px; /* Altura fixa menor para os vídeos na lateral */
+  min-height: 140px;
+}
+
+.volume-slider {
+  opacity: 0;
+  width: 0px;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.volume-input:hover .volume-slider {
+  width: 64px;
+  opacity: 1;
+  visibility: visible;
+}
+.svg-alt {
+  width: 100%;
+  height: 100%;
+}

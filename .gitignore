@@ -1,0 +1,12 @@
+# Dependências
+node_modules/
+
+# Logs
+*.log
+
+# Configurações de editores
+.vscode/
+
+# Arquivos temporários
+tmp/
+temp/
