@@ -50,6 +50,8 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(`Usuário desconectado: ${socket.id}`);
     io.emit("user-disconnected", socket.id);
+    const rooms = io.sockets.adapter.rooms;
+    console.log(rooms);
   });
 });
 

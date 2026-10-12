@@ -54,3 +54,19 @@ window.changeVolume = function (videoId, volumeValue) {
     videoElement.volume = parseFloat(volumeValue);
   }
 };
+
+const roomTitle = document.getElementById("room-title");
+const buttonsContainer = document.getElementById("buttons-container");
+let temporizador;
+
+document.addEventListener("mousemove", () => {
+  roomTitle.classList.remove("sumir");
+  buttonsContainer.classList.remove("sumir");
+
+  clearTimeout(temporizador);
+
+  temporizador = setTimeout(() => {
+    roomTitle.classList.add("sumir");
+    buttonsContainer.classList.add("sumir");
+  }, 2000);
+});
