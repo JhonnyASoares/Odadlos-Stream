@@ -94,12 +94,14 @@ function stopSharing() {
     }
   }
 
+  // Avisa os outros usuários que você parou de compartilhar
+  socket.emit("stop-sharing");
+
   shareBtn.innerText = "Compartilhar Tela";
   shareBtn.classList.remove("bg-rose-600", "hover:bg-rose-500");
   shareBtn.classList.add("bg-emerald-600", "hover:bg-emerald-500");
   localCont.classList.add("hidden");
 }
-
 async function sendOffer(socketId) {
   const peer = peers[socketId];
   if (!peer) return;
@@ -111,43 +113,6 @@ async function sendOffer(socketId) {
     console.error("Erro ao enviar offer:", err);
   }
 }
-
-// Função global para controlar o volume individual de cada vídeo
-window.changeVolume = function (videoId, volumeValue) {
-  const videoElement = document.getElementById(videoId);
-  if (videoElement) {
-    videoElement.volume = parseFloat(volumeValue);
-  }
-};
-
-// Função global para Maximizar / Minimizar qualquer vídeo
-window.toggleMaximize = function (containerId) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-
-  if (container.classList.contains("fixed")) {
-    container.classList.remove(
-      "fixed",
-      "inset-4",
-      "z-50",
-      "bg-zinc-900/95",
-      "backdrop-blur-md",
-    );
-    container.classList.add("relative", "aspect-video");
-    videosGrid.classList.remove("hidden");
-  } else {
-    container.classList.remove("relative", "aspect-video");
-    container.classList.add(
-      "fixed",
-      "inset-4",
-      "z-50",
-      "bg-zinc-900/95",
-      "backdrop-blur-md",
-    );
-    videosGrid.classList.add("hidden");
-    container.classList.remove("hidden");
-  }
-};
 
 // Eventos de Sinalização Socket.io
 socket.on("user-joined", async (socketId) => {
@@ -206,6 +171,14 @@ socket.on("user-disconnected", (socketId) => {
   if (container) container.remove();
 });
 
+socket.on("stop-sharing", (socketId) => {
+  console.log("Usuário parou de compartilhar:", socketId);
+  const container = document.getElementById(`video-container-${socketId}`);
+  if (container) {
+    container.remove();
+  }
+});
+
 function createPeerConnection(socketId) {
   const peer = new RTCPeerConnection(rtcConfig);
 
@@ -222,6 +195,11 @@ function createPeerConnection(socketId) {
     let containerId = `video-container-${socketId}`;
     let videoId = `video-${socketId}`;
     let container = document.getElementById(containerId);
+
+    event.track.onended = () => {
+      const cont = document.getElementById(containerId);
+      if (cont) cont.remove();
+    };
 
     if (!container) {
       container = document.createElement("div");
@@ -243,7 +221,7 @@ function createPeerConnection(socketId) {
 
       const controls = document.createElement("div");
       controls.className =
-        "absolute bottom-3 right-3 flex items-center gap-2 bg-black/60 backdrop-blur-sm p-1.5 rounded-lg border border-white/10";
+        "video-options absolute bottom-3 right-3 flex items-center gap-2 bg-black/60 backdrop-blur-sm p-1.5 rounded-lg border border-white/10";
 
       controls.innerHTML = `
                 <div class="volume-input flex items-center gap-1.5 px-1">

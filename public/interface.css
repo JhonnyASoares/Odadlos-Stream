@@ -50,6 +50,21 @@
   min-height: 140px;
 }
 
+.video-options {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity 0.3s ease,
+    visibility 0.3s ease;
+}
+
+.video-cont:hover {
+  .video-options {
+    opacity: 1;
+    visibility: visible;
+  }
+}
+
 .volume-slider {
   opacity: 0;
   width: 0px;

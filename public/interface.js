@@ -17,3 +17,40 @@ function toggleExpand(containerId) {
     grid.classList.add("pinned-layout");
   }
 }
+
+// Função global para Maximizar / Minimizar qualquer vídeo
+window.toggleMaximize = function (containerId) {
+  const container = document.getElementById(containerId);
+  if (!container) return;
+
+  if (container.classList.contains("fixed")) {
+    container.classList.remove(
+      "fixed",
+      "inset-4",
+      "z-50",
+      "bg-zinc-900/95",
+      "backdrop-blur-md",
+    );
+    container.classList.add("relative", "aspect-video");
+    videosGrid.classList.remove("hidden");
+  } else {
+    container.classList.remove("relative", "aspect-video");
+    container.classList.add(
+      "fixed",
+      "inset-4",
+      "z-50",
+      "bg-zinc-900/95",
+      "backdrop-blur-md",
+    );
+    videosGrid.classList.add("hidden");
+    container.classList.remove("hidden");
+  }
+};
+
+// Função global para controlar o volume individual de cada vídeo
+window.changeVolume = function (videoId, volumeValue) {
+  const videoElement = document.getElementById(videoId);
+  if (videoElement) {
+    videoElement.volume = parseFloat(volumeValue);
+  }
+};

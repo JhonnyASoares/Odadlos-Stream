@@ -37,6 +37,16 @@ io.on("connection", (socket) => {
     io.to(to).emit("ice-candidate", { from: socket.id, candidate });
   });
 
+  // Quando alguém para de compartilhar a tela
+  socket.on("stop-sharing", () => {
+    // Encontra em qual sala o usuário está e avisa os outros
+    for (const room of socket.rooms) {
+      if (room !== socket.id) {
+        socket.to(room).emit("stop-sharing", socket.id);
+      }
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log(`Usuário desconectado: ${socket.id}`);
     io.emit("user-disconnected", socket.id);
