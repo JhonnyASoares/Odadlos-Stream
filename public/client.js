@@ -38,7 +38,6 @@ leaveBtn.addEventListener("click", () => {
 });
 
 // Botão inteligente de Compartilhar / Parar Compartilhamento
-// Botão inteligente de Compartilhar / Parar Compartilhamento
 shareBtn.addEventListener("click", async () => {
   if (!localStream) {
     try {
@@ -53,12 +52,12 @@ shareBtn.addEventListener("click", async () => {
       shareBtn.classList.add("bg-rose-600", "hover:bg-rose-500");
       localCont.classList.remove("hidden");
 
-      // Adiciona as tracks do stream local em todas as conexões existentes e re-negocia
+      // Adiciona as faixas locais a todas as conexões existentes e renegocia
       for (let socketId in peers) {
         const peer = peers[socketId];
-        // Remove senders antigos se houver, para evitar duplicação
-        const senders = peer.getSenders();
-        senders.forEach((sender) => {
+
+        // Remove senders antigos do stream local para evitar duplicidade
+        peer.getSenders().forEach((sender) => {
           if (sender.track) peer.removeTrack(sender);
         });
 
@@ -66,7 +65,7 @@ shareBtn.addEventListener("click", async () => {
           peer.addTrack(track, localStream);
         });
 
-        await negotiate(socketId);
+        await sendOffer(socketId);
       }
 
       localStream.getVideoTracks()[0].onended = () => {
@@ -77,30 +76,40 @@ shareBtn.addEventListener("click", async () => {
     }
   } else {
     stopSharing();
-    localCont.classList.add("hidden");
   }
 });
 
 function stopSharing() {
   if (localStream) {
-    // Remove as tracks dos peers ativos
+    localStream.getTracks().forEach((track) => track.stop());
+    localStream = null;
+    localVideo.srcObject = null;
+
     for (let socketId in peers) {
       const peer = peers[socketId];
       peer.getSenders().forEach((sender) => {
         if (sender.track) peer.removeTrack(sender);
       });
-      negotiate(socketId);
+      sendOffer(socketId);
     }
-
-    localStream.getTracks().forEach((track) => track.stop());
-    localStream = null;
-    localVideo.srcObject = null;
   }
 
   shareBtn.innerText = "Compartilhar Tela";
   shareBtn.classList.remove("bg-rose-600", "hover:bg-rose-500");
   shareBtn.classList.add("bg-emerald-600", "hover:bg-emerald-500");
   localCont.classList.add("hidden");
+}
+
+async function sendOffer(socketId) {
+  const peer = peers[socketId];
+  if (!peer) return;
+  try {
+    const offer = await peer.createOffer();
+    await peer.setLocalDescription(offer);
+    socket.emit("offer", { to: socketId, offer });
+  } catch (err) {
+    console.error("Erro ao enviar offer:", err);
+  }
 }
 
 // Função global para controlar o volume individual de cada vídeo
@@ -146,32 +155,45 @@ socket.on("user-joined", async (socketId) => {
   const peer = createPeerConnection(socketId);
   peers[socketId] = peer;
 
-  const offer = await peer.createOffer();
-  await peer.setLocalDescription(offer);
-  socket.emit("offer", { to: socketId, offer });
+  await sendOffer(socketId);
 });
 
 socket.on("offer", async ({ from, offer }) => {
-  const peer = createPeerConnection(from);
-  peers[from] = peer;
+  let peer = peers[from];
+  if (!peer) {
+    peer = createPeerConnection(from);
+    peers[from] = peer;
+  }
 
-  await peer.setRemoteDescription(new RTCSessionDescription(offer));
-  const answer = await peer.createAnswer();
-  await peer.setLocalDescription(answer);
-  socket.emit("answer", { to: from, answer });
+  try {
+    await peer.setRemoteDescription(new RTCSessionDescription(offer));
+    const answer = await peer.createAnswer();
+    await peer.setLocalDescription(answer);
+    socket.emit("answer", { to: from, answer });
+  } catch (err) {
+    console.error("Erro ao processar offer:", err);
+  }
 });
 
 socket.on("answer", async ({ from, answer }) => {
   const peer = peers[from];
   if (peer) {
-    await peer.setRemoteDescription(new RTCSessionDescription(answer));
+    try {
+      await peer.setRemoteDescription(new RTCSessionDescription(answer));
+    } catch (err) {
+      console.error("Erro ao processar answer:", err);
+    }
   }
 });
 
 socket.on("ice-candidate", async ({ from, candidate }) => {
   const peer = peers[from];
   if (peer) {
-    await peer.addIceCandidate(new RTCIceCandidate(candidate));
+    try {
+      await peer.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (err) {
+      console.error("Erro ao adicionar ICE candidate:", err);
+    }
   }
 });
 
@@ -219,7 +241,6 @@ function createPeerConnection(socketId) {
         "absolute bottom-3 left-3 bg-black/60 px-3 py-1 rounded text-xs font-medium";
       label.innerText = "Amigo";
 
-      // Barra de controles superior direita (Volume + Maximizar)
       const controls = document.createElement("div");
       controls.className =
         "absolute bottom-3 right-3 flex items-center gap-2 bg-black/60 backdrop-blur-sm p-1.5 rounded-lg border border-white/10";
@@ -248,10 +269,15 @@ function createPeerConnection(socketId) {
       container.appendChild(label);
       container.appendChild(controls);
       videosGrid.appendChild(container);
+    } else {
+      const video = document.getElementById(videoId);
+      if (video && event.streams[0]) {
+        video.srcObject = event.streams[0];
+      }
     }
   };
 
-  // Se você já estiver compartilhando tela, injeta as tracks no novo peer na criação
+  // Se você já estiver compartilhando tela na hora que alguém entra, injeta o stream
   if (localStream) {
     localStream.getTracks().forEach((track) => {
       peer.addTrack(track, localStream);
@@ -259,15 +285,4 @@ function createPeerConnection(socketId) {
   }
 
   return peer;
-}
-
-async function negotiate(socketId) {
-  const peer = peers[socketId];
-  try {
-    const offer = await peer.createOffer();
-    await peer.setLocalDescription(offer);
-    socket.emit("offer", { to: socketId, offer });
-  } catch (err) {
-    console.error("Erro na negociação:", err);
-  }
 }
