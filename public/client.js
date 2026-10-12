@@ -205,7 +205,7 @@ function createPeerConnection(socketId) {
       container = document.createElement("div");
       container.id = containerId;
       container.className =
-        "relative bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 aspect-video flex items-center justify-center transition-all duration-300";
+        "video-cont relative bg-zinc-900 rounded-xl overflow-hidden border border-zinc-800 aspect-video flex items-center justify-center transition-all duration-300";
 
       const video = document.createElement("video");
       video.id = videoId;
