@@ -9,6 +9,7 @@ const leaveBtn = document.getElementById("leave-btn");
 const videosGrid = document.getElementById("videos-grid");
 const localVideo = document.getElementById("local-video");
 const localCont = document.getElementById("local-container");
+const roomCountElement = document.getElementById("room-count");
 
 let localStream = null;
 let peers = {};
@@ -123,6 +124,12 @@ socket.on("user-joined", async (socketId) => {
   await sendOffer(socketId);
 });
 
+socket.on("room-count", (count) => {
+  if (roomCountElement) {
+    roomCountElement.innerText = `${count} ${count === 1 ? "👀" : "👀"}`;
+  }
+});
+
 socket.on("offer", async ({ from, offer }) => {
   let peer = peers[from];
   if (!peer) {
@@ -226,7 +233,7 @@ function createPeerConnection(socketId) {
       controls.innerHTML = `
                 <div class="volume-input flex items-center gap-1.5 px-1">
                     <svg class="w-4 h-4 text-zinc-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"></path></svg>
-                    <input type="range" min="0" max="1" step="0.05" value="1" oninput="changeVolume('${videoId}', this.value)" class="volume-slider w-16 accent-indigo-500 cursor-pointer">
+                    <input type="range" min="0" max="1" step="0.01" value="1" oninput="changeVolume('${videoId}', this.value)" class="volume-slider w-16 accent-indigo-500 cursor-pointer">
                 </div>
                 <div class="h-4 w-[1px] bg-white/20"></div>
                 <button

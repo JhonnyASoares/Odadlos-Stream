@@ -23,27 +23,22 @@ window.toggleMaximize = function (containerId) {
   const container = document.getElementById(containerId);
   if (!container) return;
 
-  if (container.classList.contains("fixed")) {
-    container.classList.remove(
-      "fixed",
-      "inset-4",
-      "z-50",
-      "bg-zinc-900/95",
-      "backdrop-blur-md",
-    );
-    container.classList.add("relative", "aspect-video");
-    videosGrid.classList.remove("hidden");
+  // Se já estiver em tela cheia, sai do modo fullscreen
+  if (document.fullscreenElement) {
+    document.exitFullscreen().catch((err) => {
+      console.error("Erro ao sair do fullscreen:", err);
+    });
   } else {
-    container.classList.remove("relative", "aspect-video");
-    container.classList.add(
-      "fixed",
-      "inset-4",
-      "z-50",
-      "bg-zinc-900/95",
-      "backdrop-blur-md",
-    );
-    videosGrid.classList.add("hidden");
-    container.classList.remove("hidden");
+    // Caso contrário, coloca o container inteiro (com vídeo, botões e labels) em Fullscreen
+    if (container.requestFullscreen) {
+      container.requestFullscreen();
+    } else if (container.webkitRequestFullscreen) {
+      // Suporte para Safari/iOS
+      container.webkitRequestFullscreen();
+    } else if (container.msRequestFullscreen) {
+      // Suporte para IE/Edge antigo
+      container.msRequestFullscreen();
+    }
   }
 };
 
@@ -57,16 +52,19 @@ window.changeVolume = function (videoId, volumeValue) {
 
 const roomTitle = document.getElementById("room-title");
 const buttonsContainer = document.getElementById("buttons-container");
+const roomCount = document.getElementById("room-count");
 let temporizador;
 
 document.addEventListener("mousemove", () => {
   roomTitle.classList.remove("sumir");
   buttonsContainer.classList.remove("sumir");
+  roomCount.classList.remove("sumir");
 
   clearTimeout(temporizador);
 
   temporizador = setTimeout(() => {
     roomTitle.classList.add("sumir");
     buttonsContainer.classList.add("sumir");
+    roomCount.classList.add("sumir");
   }, 2000);
 });

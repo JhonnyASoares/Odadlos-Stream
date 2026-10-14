@@ -44,6 +44,9 @@
       <h2 id="room-title" class="font-semibold text-lg">
         Sala: <span class="text-indigo-400"></span>
       </h2>
+      <span id="room-count" class="text-xs text-zinc-400">
+        0 pessoas na sala
+      </span>
       <div id="buttons-container" class="flex gap-3">
         <button
           id="share-btn"
@@ -101,7 +104,7 @@
                 type="range"
                 min="0"
                 max="1"
-                step="0.05"
+                step="0.01"
                 value="1"
                 oninput="changeVolume('local-video', this.value)"
                 class="volume-slider w-16 accent-indigo-500 cursor-pointer"

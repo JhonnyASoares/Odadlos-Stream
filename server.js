@@ -20,6 +20,9 @@ io.on("connection", (socket) => {
 
     // Avisa os outros na sala que alguém chegou
     socket.to(roomId).emit("user-joined", socket.id);
+
+    // Atualiza a contagem para todos na sala
+    updateRoomCount(io, roomId);
   });
 
   // Repassa a oferta WebRTC (SDP)
@@ -50,8 +53,11 @@ io.on("connection", (socket) => {
   socket.on("disconnect", () => {
     console.log(`Usuário desconectado: ${socket.id}`);
     io.emit("user-disconnected", socket.id);
-    const rooms = io.sockets.adapter.rooms;
-    console.log(rooms);
+    for (const room of socket.rooms) {
+      if (room !== socket.id) {
+        updateRoomCount(io, room);
+      }
+    }
   });
 });
 
@@ -59,3 +65,10 @@ const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
 });
+
+// Função para contar quantos usuários estão na sala
+function updateRoomCount(io, room) {
+  const roomClients = io.sockets.adapter.rooms.get(room);
+  const count = roomClients ? roomClients.size : 0;
+  io.to(room).emit("room-count", count);
+}
